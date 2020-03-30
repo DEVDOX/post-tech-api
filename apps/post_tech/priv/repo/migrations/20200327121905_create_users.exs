@@ -3,12 +3,18 @@ defmodule PostTech.Repo.Migrations.CreateUsers do
 
   def change do
     create table(:users) do
-      add :email, :string
-      add :encrypted_password, :string
+      add :email, :string, null: false
+      add :qiita_id, :string
+      add :github_id, :string
+      add :twitter_id, :string
       add :tos, :boolean, default: false, null: false
 
       timestamps()
     end
 
+    create unique_index(:users, [:email])
+    create unique_index(:users, [:qiita_id])
+    create unique_index(:users, [:github_id])
+    create unique_index(:users, [:twitter_id])
   end
 end

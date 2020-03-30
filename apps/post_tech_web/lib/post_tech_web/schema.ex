@@ -1,15 +1,35 @@
 defmodule PostTechWeb.Schema do
+  use Absinthe.Schema
+
   alias PostTechWeb.Resolvers
   alias PostTechWeb.Data
+
+  import AbsintheErrorPayload.Payload
 
   import_types Absinthe.Type.Custom
   import_types PostTechWeb.Schema.Types
 
-
   query do
+    @desc "Get a page(list) of user details"
+    field :get_user_detail_list, list_of(:user_detail_type) do
+      arg :after, :string
+      arg :before, :string
+      arg :limit, :string
+      resolve &Resolvers.UserDetailResolver.list/3
+    end
+
+    @desc "Get a detail of a specific user"
+    field :get_user_detail, :user_detail_type do
+      arg :strategy_id, :string
+      arg :strategy, :string
+      resolve &Resolvers.UserDetailResolver.show/3
+    end
   end
 
   mutation do
+    import_fields :user_mutations
+    import_fields :session_mutations
+    import_fields :post_mutations
   end
 
   def context(ctx) do

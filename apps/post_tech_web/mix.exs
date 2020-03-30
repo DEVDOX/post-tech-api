@@ -24,7 +24,7 @@ defmodule PostTechWeb.MixProject do
   def application do
     [
       mod: {PostTechWeb.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :oauth2]
     ]
   end
 
@@ -49,6 +49,9 @@ defmodule PostTechWeb.MixProject do
       {:absinthe, "~> 1.4.0"},
       {:absinthe_plug, "~> 1.4.0"},
       {:dataloader, "~> 1.0.0"},
+      {:oauth2, "~> 2.0"},
+      {:absinthe_error_payload, "~> 1.0"},
+      {:tesla, "~> 1.3.0"},
       {:paginator, git: "https://github.com/qwexvf/paginator"},
     ]
   end

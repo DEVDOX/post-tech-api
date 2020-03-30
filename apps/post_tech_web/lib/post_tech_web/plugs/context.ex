@@ -3,7 +3,7 @@ defmodule PostTechWeb.Plugs.Context do
 
   import Plug.Conn
 
-  alias PostTechWeb.Guardian
+  alias PostTech.Guardian
 
   def init(opts), do: opts
 
