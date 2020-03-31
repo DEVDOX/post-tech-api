@@ -1,8 +1,8 @@
 defmodule PostTech.Guardian do
   use Guardian, otp_app: :post_tech
 
-  def subject_for_token(%PostTech.Accounts.User{} = user, _claims) do
-    {:ok, to_string(user.id)}
+  def subject_for_token(user, _claims) do
+    {:ok, to_string(user.user_id)}
   end
   def subject_for_token(_, _) do
     {:error, :reason_for_error}

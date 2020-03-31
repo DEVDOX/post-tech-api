@@ -54,9 +54,11 @@ defmodule PostTech.Contents do
 
   """
   def create_post(attrs \\ %{}, current_user) do
+    build_tags = Ecto.Changeset.change(%Post{}, tags: attrs.tags) |> IO.inspect
+    # %Tag{user_id: 1, body: "Vuejs"}
     %Post{user_id: current_user.id}
     |> Post.changeset(attrs)
-    |> Repo.insert()
+    # |> Repo.insert()
     |> IO.inspect()
   end
 
