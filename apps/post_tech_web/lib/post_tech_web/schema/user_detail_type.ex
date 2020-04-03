@@ -17,6 +17,7 @@ defmodule PostTechWeb.Schema.UserDetailType do
     field :id, :id
     field :display_name, :string
     field :avatar, :string
+    field :tagline, :string
     field :location, :string
     field :company, :string
     field :unique_name, :string
