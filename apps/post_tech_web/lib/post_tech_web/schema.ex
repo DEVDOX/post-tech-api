@@ -24,6 +24,14 @@ defmodule PostTechWeb.Schema do
       arg :strategy, :string
       resolve &Resolvers.UserDetailResolver.show/3
     end
+
+    @desc "Get a detail of a specific user by unique_name"
+    field :get_user_detail_by_u_name, :user_detail_type do
+      arg :unique_name, :string
+      resolve &Resolvers.UserDetailResolver.show/3
+    end
+
+    import_fields :post_queries
   end
 
   mutation do

@@ -3,13 +3,17 @@ defmodule PostTech.Accounts do
 
   alias Ecto.Multi
   alias PostTech.Repo
-  alias PostTech.Accounts.{User, UserDetail}
+  alias PostTech.Accounts.{User, UserDetail, UserContacts}
 
   def list_users do
     Repo.all(User)
   end
 
   ## User
+
+  def get_user(id) do
+    Repo.get(User, id)
+  end
 
   def get_user!(id) do
     Repo.get!(User, id)
@@ -65,6 +69,12 @@ defmodule PostTech.Accounts do
     Repo.one(query)
   end
 
+  def get_user_detail(%{unique_name: unique_name}) do
+    UserDetail
+    |> where([u], u.unique_name == ^unique_name)
+    |> Repo.one()
+  end
+
   def get_or_create(params) do
     query =
       from u in UserDetail, 
@@ -83,6 +93,34 @@ defmodule PostTech.Accounts do
     Multi.new()
     |> Multi.run(:create_user, __MODULE__, :create_user, [params])
     |> Repo.transaction()
-    |> IO.inspect
+  end
+
+  def create_contacts(contacts, current_user) do
+    types = Enum.map(contacts, fn contact -> contact.type end)
+    current_user = Repo.preload(current_user, :user_detail)
+
+    if length(types) > 0 do
+      current_contacts = 
+        UserContacts
+        |> where([c], c.user_detail_id == ^current_user.user_detail.id)
+        |> where([c], c.type in ^types)
+        |> Repo.all()
+        |> IO.inspect
+
+      if length(current_contacts) == 0 do
+        # insert all
+        current_user.user_detail
+        |> Repo.preload(:contacts)
+        |> Ecto.Changeset.change
+        |> Ecto.Changeset.put_assoc(:contacts, contacts)
+        |> Repo.update!()
+      else
+        IO.inspect contacts
+        IO.inspect current_contacts
+        Enum.each(current_contacts, fn contact ->
+
+        end)
+      end
+    end
   end
 end

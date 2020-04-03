@@ -23,7 +23,7 @@ defmodule PostTech.MixProject do
   def application do
     [
       mod: {PostTech.Application, []},
-      extra_applications: [:logger, :runtime_tools, :shortuuid]
+      extra_applications: [:logger, :runtime_tools, :shortuuid, :timex]
     ]
   end
 
@@ -46,7 +46,9 @@ defmodule PostTech.MixProject do
       {:guardian_db, "~> 2.0"},
       {:argon2_elixir, "~> 2.0"},
       {:elixir_uuid, "~> 1.2"},
-      {:shortuuid, "~> 2.0"}
+      {:shortuuid, "~> 2.0"},
+      {:timex, "~> 3.0"},
+      {:ecto_enum, "~> 1.4"}
     ]
   end
 

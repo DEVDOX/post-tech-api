@@ -2,6 +2,8 @@ defmodule PostTech.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @timestamps_opts [type: :utc_datetime]
+
   schema "users" do
     field :email, :string
     field :qiita_id, :string
@@ -12,8 +14,8 @@ defmodule PostTech.Accounts.User do
     field :strategy, :string, virtual: true
     field :strategy_id, :string, virtual: true
 
-
-    has_one :user_details, PostTech.Accounts.UserDetail
+    has_one :user_detail, PostTech.Accounts.UserDetail
+    has_many :likes,  PostTech.Contents.PostLikes
 
     timestamps()
   end

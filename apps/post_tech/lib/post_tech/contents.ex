@@ -6,7 +6,8 @@ defmodule PostTech.Contents do
   import Ecto.Query, warn: false
   alias PostTech.Repo
 
-  alias PostTech.Contents.Post
+  alias PostTech.Contents.{Post, Tag, PostLikes}
+  alias PostTech.Accounts.UserDetail
 
   @doc """
   Returns the list of posts.
@@ -37,8 +38,71 @@ defmodule PostTech.Contents do
   """
   def get_post!(id), do: Repo.get!(Post, id)
 
-  def get_post_by_url!(url) do
-    Repo.get_by!(Post, url: url)
+  def get_post_by(%{url: url}) do
+    Post
+    |> where([p], p.state == ^:published)
+    |> where([p], p.url == ^url)
+    |> preload([p], [:user_detail, :tags])
+    |> Repo.one()
+  end
+
+  def get_post_by(%{id: id}) do
+    Repo.get_by(Post, id: id)
+  end
+
+  def get_public_posts(%{after: pafter, before: before}) do
+    Post
+    |> where([p], p.state == ^:published)
+    |> preload([p], [:user_detail, :tags])
+    |> Repo.all()
+  end
+
+  def get_user_posts(%{user_id: user_id}) do
+    Post
+    |> where([p], p.user_detail_id == ^user_id)
+    |> preload([p], [:user_detail, :tags])
+    |> Repo.all()
+  end
+
+  def get_user_posts(%{unique_name: unique_name}) do
+    Post
+    |> join(:left, [p], user_detail in UserDetail, on: user_detail.unique_name == ^unique_name)
+    |> where([p, user_detail], user_detail.unique_name == ^unique_name)
+    |> preload([p], [:user_detail, :tags])
+    |> Repo.all()
+  end
+
+  def put_timestamps(attrs) when is_list(attrs) do
+    attrs
+    |> Enum.map(fn(row) -> put_timestamps(row) end)
+  end
+
+  def put_timestamps(attrs) when is_map(attrs) do
+    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+
+    attrs
+    |> Map.put(:inserted_at, now)
+    |> Map.put(:updated_at, now)
+  end
+
+  def list_tags do
+    Repo.all(Tag)
+  end
+
+  def create_tags(tags \\ [], user_detail_id) do
+    tags
+    |> put_timestamps()
+    |> Enum.map(fn(row) ->
+      case Repo.get_by(Tag, name: row.name) do
+        nil ->
+          row =
+            row
+            |> Map.put(:url_name, String.downcase(row.name))
+            |> Map.put(:user_detail_id, user_detail_id)
+          Tag.changeset(%Tag{}, row) |> Repo.insert!
+        tag -> tag
+      end
+    end)
   end
 
   @doc """
@@ -53,13 +117,53 @@ defmodule PostTech.Contents do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_post(attrs \\ %{}, current_user) do
-    build_tags = Ecto.Changeset.change(%Post{}, tags: attrs.tags) |> IO.inspect
-    # %Tag{user_id: 1, body: "Vuejs"}
-    %Post{user_id: current_user.id}
+  def create_post(attrs, current_user) do
+    current_user = Repo.preload(current_user, :user_detail)
+
+    new_tags =
+      attrs.tags
+      |> Enum.filter(fn(tag) ->
+        Map.has_key?(tag, :id) == false
+      end)
+      |> create_tags(current_user.id)
+
+    gather_tags =
+      Enum.filter(attrs.tags, fn(tag) ->
+        if Map.has_key?(tag, :id) do
+          Repo.get!(Tag, tag.id)
+        end
+      end) ++ new_tags
+
+    %Post{user_detail_id: current_user.user_detail.id}
     |> Post.changeset(attrs)
-    # |> Repo.insert()
-    |> IO.inspect()
+    |> Repo.insert()
+    |> case do
+      {:ok, post} ->
+        new_post = 
+          post
+          |> Repo.preload([:tags, :user_detail])
+          |> Ecto.Changeset.change
+          |> Ecto.Changeset.put_assoc(:tags, gather_tags)
+          |> Repo.update!()
+        {:ok, new_post}
+      {:error, changeset} ->
+        {:error, changeset}
+    end
+  end
+
+  def like_post(post_url, current_user) do
+    case get_post_by(%{url: post_url}) do
+      nil ->
+        :noop
+      post ->
+        params =
+          %{user_detail_id: current_user.user_detail.id, post_id: post.id}
+          |> put_timestamps() |> IO.inspect
+
+        %PostLikes{}
+        |> PostLikes.changeset(params)
+        |> Repo.insert()
+    end
   end
 
   @doc """
@@ -92,8 +196,10 @@ defmodule PostTech.Contents do
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_post(%Post{} = post) do
-    Repo.delete(post)
+  def delete_post(%Post{} = post, current_user) do
+    if post.user_detail.id == current_user.user_detail.id do
+      Repo.delete(post)
+    end
   end
 
   @doc """

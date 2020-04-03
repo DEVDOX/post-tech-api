@@ -27,3 +27,7 @@ config :phoenix, :stacktrace_depth, 20
 
 config :arc,
   storage: Arc.Storage.Local
+
+config :post_tech, PostTech.Guardian,
+  issuer: "post_tech",
+  secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"

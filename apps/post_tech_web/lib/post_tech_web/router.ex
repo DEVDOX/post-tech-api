@@ -18,12 +18,9 @@ defmodule PostTechWeb.Router do
     if Mix.env() == :dev do
       forward "/graphiql", Absinthe.Plug.GraphiQL, schema: PostTechWeb.Schema
     end
-
   end
 
   scope "/api/auth", PostTechWeb do
     pipe_through [:api]
-
-    get "/callback", AuthController, :callback
   end
 end
