@@ -10,27 +10,7 @@ defmodule PostTechWeb.Schema do
   import_types PostTechWeb.Schema.Types
 
   query do
-    @desc "Get a page(list) of user details"
-    field :get_user_detail_list, list_of(:user_detail_type) do
-      arg :after, :string
-      arg :before, :string
-      arg :limit, :string
-      resolve &Resolvers.UserDetailResolver.list/3
-    end
-
-    @desc "Get a detail of a specific user"
-    field :get_user_detail, :user_detail_type do
-      arg :strategy_id, :string
-      arg :strategy, :string
-      resolve &Resolvers.UserDetailResolver.show/3
-    end
-
-    @desc "Get a detail of a specific user by unique_name"
-    field :get_user_detail_by_u_name, :user_detail_type do
-      arg :unique_name, :string
-      resolve &Resolvers.UserDetailResolver.show/3
-    end
-
+    import_fields :user_detail_queries
     import_fields :post_queries
   end
 

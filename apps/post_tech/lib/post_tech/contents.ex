@@ -23,6 +23,36 @@ defmodule PostTech.Contents do
   end
 
   @doc """
+  Returns pagination of posts.
+
+  ## Examples
+
+      iex> paginate_posts()
+      [%Post{}, ...]
+
+  """
+  def paginate_posts(%{unique_name: unique_name} = params) do
+    Post
+    |> join(:left, [p], user_detail in UserDetail, on: user_detail.unique_name == ^unique_name)
+    |> where([p, user_detail], user_detail.unique_name == ^unique_name)
+    |> preload([p], [:user_detail, :tags])
+    |> paginate_posts()
+  end
+
+  def paginate_posts(%{tag_url: tag_url} = params) do
+    Post
+    |> join(:left, [p], tag in assoc(p, :tags))
+    |> group_by([p], p.id)
+    |> having([p, tag], fragment("? <@ array_agg(?)", ^[tag_url], tag.url_name))
+    |> preload([p], :tags)
+    |> paginate_posts()
+  end
+
+  def paginate_posts(query) do
+    Repo.paginate(query, cursor_fields: [:inserted_at, :id])
+  end
+
+  @doc """
   Gets a single post.
 
   Raises `Ecto.NoResultsError` if the Post does not exist.
@@ -139,7 +169,7 @@ defmodule PostTech.Contents do
     |> Repo.insert()
     |> case do
       {:ok, post} ->
-        new_post = 
+        new_post =
           post
           |> Repo.preload([:tags, :user_detail])
           |> Ecto.Changeset.change
