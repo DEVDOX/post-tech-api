@@ -19,7 +19,7 @@ defmodule PostTechWeb.Schema.UserDetailType do
     field :avatar, :string
     field :tagline, :string
     field :location, :string
-    field :code_locale, :string
+    field :locale_code, :string
     field :website_url, :string
     field :tagline, :string
     field :company, :string
@@ -31,7 +31,7 @@ defmodule PostTechWeb.Schema.UserDetailType do
     field :avatar, :string
     field :tagline, :string
     field :location, :string
-    field :code_locale, :string
+    field :locale_code, :string
     field :website_url, :string
     field :tagline, :string
     field :company, :string
