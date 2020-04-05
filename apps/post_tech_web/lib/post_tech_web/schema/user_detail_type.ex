@@ -19,6 +19,9 @@ defmodule PostTechWeb.Schema.UserDetailType do
     field :avatar, :string
     field :tagline, :string
     field :location, :string
+    field :code_locale, :string
+    field :website_url, :string
+    field :tagline, :string
     field :company, :string
     field :unique_name, :string
   end
@@ -26,8 +29,13 @@ defmodule PostTechWeb.Schema.UserDetailType do
   input_object :create_user_detail do
     field :display_name, :string
     field :avatar, :string
+    field :tagline, :string
     field :location, :string
+    field :code_locale, :string
+    field :website_url, :string
+    field :tagline, :string
     field :company, :string
+    field :unique_name, :string
     field :unique_name, non_null(:string)
   end
 

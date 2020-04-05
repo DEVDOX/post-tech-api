@@ -52,8 +52,7 @@ defmodule PostTechWeb.MixProject do
       {:oauth2, "~> 2.0"},
       {:absinthe_error_payload, "~> 1.0"},
       {:tesla, "~> 1.3.0"},
-      {:timex, "~> 3.0"},
-      {:paginator, git: "https://github.com/qwexvf/paginator"},
+      {:timex, "~> 3.0"}
     ]
   end
 

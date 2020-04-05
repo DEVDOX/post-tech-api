@@ -48,7 +48,8 @@ defmodule PostTech.MixProject do
       {:elixir_uuid, "~> 1.2"},
       {:shortuuid, "~> 2.0"},
       {:timex, "~> 3.0"},
-      {:ecto_enum, "~> 1.4"}
+      {:ecto_enum, "~> 1.4"},
+      {:paginator, "~> 0.6"}
     ]
   end
 
