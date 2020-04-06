@@ -14,6 +14,7 @@ defmodule PostTechWeb.Resolvers.PostResolver do
   end
 
   def get_user_posts(_, params, _) do
+    IO.inspect params
     {:ok, Contents.get_user_posts(params)}
   end
 
@@ -21,11 +22,21 @@ defmodule PostTechWeb.Resolvers.PostResolver do
     {:ok, Contents.get_public_posts(params)}
   end
 
+  def get_posts_by_tag(_, %{url: url, metadata: metadata} = params, _) do
+    {:ok, Contents.get_posts_by_tag(params)}
+  end
+
+  def get_user_liked_posts(_, %{unique_name: _unique_name,
+    metadata: _metadata} = params, _)
+  do
+    {:ok, Contents.get_user_liked_posts(params)}
+  end
+
   def create_post(_, %{params: params}, %{context: %{current_user: current_user}}) do
     case Contents.create_post(params, current_user) do
       {:ok, payload} ->
         {:ok, payload}
-      {:error, %Ecto.Changeset{} = changeset} -> 
+      {:error, %Ecto.Changeset{} = changeset} ->
         {:ok, changeset}
     end
   end
@@ -34,7 +45,16 @@ defmodule PostTechWeb.Resolvers.PostResolver do
     case Contents.like_post(post_url, current_user) do
       {:ok, payload} ->
         {:ok, payload}
-      {:error, %Ecto.Changeset{} = changeset} -> 
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:ok, changeset}
+    end
+  end
+
+  def delete_like(_, %{post_url: post_url, like_id: like_id} = params, %{context: %{current_user: current_user}}) do
+    case Contents.delete_like(params, current_user) do
+      {:ok, payload} ->
+        {:ok, payload}
+      {:error, %Ecto.Changeset{} = changeset} ->
         {:ok, changeset}
     end
   end
@@ -43,7 +63,7 @@ defmodule PostTechWeb.Resolvers.PostResolver do
     case Contents.update_post(params, current_user) do
       {:ok, payload} ->
         {:ok, payload}
-      {:error, %Ecto.Changeset{} = changeset} -> 
+      {:error, %Ecto.Changeset{} = changeset} ->
         {:ok, changeset}
     end
   end
@@ -52,7 +72,7 @@ defmodule PostTechWeb.Resolvers.PostResolver do
     case Contents.delete_post(params, current_user) do
       {:ok, payload} ->
         {:ok, payload}
-      {:error, %Ecto.Changeset{} = changeset} -> 
+      {:error, %Ecto.Changeset{} = changeset} ->
         {:ok, changeset}
     end
   end

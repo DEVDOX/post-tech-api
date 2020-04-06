@@ -12,6 +12,12 @@ defmodule PostTechWeb.Schema.Types do
     field :total_count_cap_exceeded, :boolean
   end
 
+  input_object :metadata_input do
+    field :after, :string
+    field :before, :string
+    field :limit, :integer
+  end
+
   import_types(UserType)
   import_types(UserDetailType)
   import_types(PostType)

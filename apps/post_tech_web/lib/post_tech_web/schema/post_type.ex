@@ -10,7 +10,7 @@ defmodule PostTechWeb.Schema.PostType do
 
   import_types AbsintheErrorPayload.ValidationMessageTypes
 
-  object :tags do
+  object :tag_type do
     field :id, :id
     field :name, :string
     field :url_name, :string
@@ -30,7 +30,8 @@ defmodule PostTechWeb.Schema.PostType do
     field :uuid, :string
     field :user_detail, :user_detail_type
     field :state, :string
-    field :tags, list_of(:tags)
+    field :tags, list_of(:tag_type)
+    field :likes, list_of(:like_type)
     field :inserted_at, :naive_datetime
     field :updated_at, :naive_datetime
   end
@@ -65,26 +66,32 @@ defmodule PostTechWeb.Schema.PostType do
     end
 
     field :get_public_posts, type: :post_pagination_type do
-      arg :after, :string
-      arg :before, :string
-      arg :limit, :string
+      arg :metadata, :metadata_input
       resolve &Resolvers.PostResolver.get_public_posts/3
     end
 
     field :get_user_posts_by_id, type: :post_pagination_type do
-      arg :after, :string
-      arg :before, :string
-      arg :limit, :string
+      arg :metadata, :metadata_input
       arg :user_id, non_null(:integer)
       resolve &Resolvers.PostResolver.get_user_posts/3
     end
 
     field :get_user_posts_by_u_name, type: :post_pagination_type do
-      arg :after, :string
-      arg :before, :string
-      arg :limit, :string
+      arg :metadata, :metadata_input
       arg :unique_name, non_null(:string)
       resolve &Resolvers.PostResolver.get_user_posts/3
+    end
+
+    field :get_posts_by_tag, type: :post_pagination_type do
+      arg :metadata, :metadata_input
+      arg :url, non_null(:string)
+      resolve &Resolvers.PostResolver.get_posts_by_tag/3
+    end
+
+    field :get_user_liked_posts, type: :post_pagination_type do
+      arg :metadata, :metadata_input
+      arg :unique_name, non_null(:string)
+      resolve &Resolvers.PostResolver.get_user_liked_posts/3
     end
   end
 
@@ -97,10 +104,25 @@ defmodule PostTechWeb.Schema.PostType do
       middleware &build_payload/2
     end
 
-    field :like_post, type: :like_payload_type do
+    field :create_post, type: :post_payload_type do
+      arg :params, non_null(:create_post_params)
+      middleware Authentication
+      resolve &Resolvers.PostResolver.create_post/3
+      middleware &build_payload/2
+    end
+
+    field :add_like, type: :post_payload_type do
       arg :post_url, non_null(:string)
       middleware Authentication
       resolve &Resolvers.PostResolver.create_like/3
+      middleware &build_payload/2
+    end
+
+    field :delete_like, type: :post_payload_type do
+      arg :post_url, non_null(:string)
+      arg :like_id, non_null(:integer)
+      middleware Authentication
+      resolve &Resolvers.PostResolver.delete_like/3
       middleware &build_payload/2
     end
   end

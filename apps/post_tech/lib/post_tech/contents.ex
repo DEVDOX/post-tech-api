@@ -7,6 +7,7 @@ defmodule PostTech.Contents do
   alias PostTech.Repo
 
   alias PostTech.Contents.{Post, Tag, PostLikes}
+  alias PostTech.Accounts
   alias PostTech.Accounts.UserDetail
 
   @doc """
@@ -22,35 +23,6 @@ defmodule PostTech.Contents do
     Repo.all(Post)
   end
 
-  @doc """
-  Returns pagination of posts.
-
-  ## Examples
-
-      iex> paginate_posts()
-      [%Post{}, ...]
-
-  """
-  def paginate_posts(%{unique_name: unique_name} = params) do
-    Post
-    |> join(:left, [p], user_detail in UserDetail, on: user_detail.unique_name == ^unique_name)
-    |> where([p, user_detail], user_detail.unique_name == ^unique_name)
-    |> preload([p], [:user_detail, :tags])
-    |> paginate_posts()
-  end
-
-  def paginate_posts(%{tag_url: tag_url} = params) do
-    Post
-    |> join(:left, [p], tag in assoc(p, :tags))
-    |> group_by([p], p.id)
-    |> having([p, tag], fragment("? <@ array_agg(?)", ^[tag_url], tag.url_name))
-    |> preload([p], :tags)
-    |> paginate_posts()
-  end
-
-  def paginate_posts(query) do
-    Repo.paginate(query, cursor_fields: [:inserted_at, :id])
-  end
 
   @doc """
   Gets a single post.
@@ -72,7 +44,15 @@ defmodule PostTech.Contents do
     Post
     |> where([p], p.state == ^:published)
     |> where([p], p.url == ^url)
-    |> preload([p], [:user_detail, :tags])
+    |> preload([p], [:user_detail, :tags, :likes])
+    |> Repo.one()
+  end
+
+  def get_post_by(%{post_url: post_url, like_id: like_id}) do
+    Post
+    |> join(:left, [p], like in assoc(p, :likes), on: like.id == ^like_id)
+    |> where([p, like], p.url == ^post_url)
+    |> preload([p], [:likes])
     |> Repo.one()
   end
 
@@ -80,26 +60,74 @@ defmodule PostTech.Contents do
     Repo.get_by(Post, id: id)
   end
 
-  def get_public_posts(%{after: pafter, before: before}) do
+  def get_public_posts(%{metadata: metadata}) do
     Post
     |> where([p], p.state == ^:published)
     |> preload([p], [:user_detail, :tags])
-    |> Repo.all()
+    |> paginate_posts(metadata)
   end
 
-  def get_user_posts(%{user_id: user_id}) do
+  def get_public_posts(%{url: url, metadata: metadata}) do
+    Post
+    |> where([p], p.state == ^:published)
+    |> preload([p], [:user_detail, :tags])
+    |> paginate_posts(metadata)
+  end
+
+  def get_posts_by_tag(%{url: url, metadata: metadata}) do
+    Post
+    |> join(:left, [p], tag in assoc(p, :tags))
+    |> group_by([p], p.id)
+    |> having([p, tag], fragment("? <@ array_agg(?)", ^[url], tag.url_name))
+    |> preload([p], :tags)
+    |> paginate_posts(metadata)
+  end
+
+  def get_user_posts(%{user_id: user_id, metadata: metadata}) do
     Post
     |> where([p], p.user_detail_id == ^user_id)
     |> preload([p], [:user_detail, :tags])
-    |> Repo.all()
+    |> paginate_posts(metadata)
   end
 
-  def get_user_posts(%{unique_name: unique_name}) do
+  def get_user_liked_posts(%{unique_name: unique_name, metadata: metadata}) do
+    user = Accounts.get_user_detail(%{unique_name: unique_name})
+
+    Post
+    |> join(:left, [p], like in assoc(p, :likes))
+    |> group_by([p], p.id)
+    |> having([p, like], fragment("? <@ array_agg(?)", ^[user.id], like.user_detail_id))
+    |> preload([p], [:likes, :user_detail])
+    |> paginate_posts(metadata)
+  end
+
+  def get_user_posts(%{unique_name: unique_name, metadata: metadata}) do
+    IO.inspect metadata
     Post
     |> join(:left, [p], user_detail in UserDetail, on: user_detail.unique_name == ^unique_name)
     |> where([p, user_detail], user_detail.unique_name == ^unique_name)
     |> preload([p], [:user_detail, :tags])
-    |> Repo.all()
+    |> paginate_posts(metadata)
+  end
+
+  def paginate_posts(query, metadata) when map_size(metadata) == 0 do
+    Repo.paginate(query, cursor_fields: [:inserted_at, :id])
+  end
+
+  def paginate_posts(query, %{after: _after_cursor, before: _before} = params) do
+    params = :maps.filter fn _, v -> v != nil end, params
+    paginate_posts(query, params)
+  end
+
+  def paginate_posts(%{tag_url: tag_url, metadata: metadata}) do
+  end
+
+  def paginate_posts(query, %{before: before_cursor}) do
+    Repo.paginate(query, before: before_cursor, cursor_fields: [:inserted_at, :id])
+  end
+
+  def paginate_posts(query, %{after: after_cursor}) do
+    Repo.paginate(query, after: after_cursor, cursor_fields: [:inserted_at, :id])
   end
 
   def put_timestamps(attrs) when is_list(attrs) do
@@ -182,18 +210,29 @@ defmodule PostTech.Contents do
   end
 
   def like_post(post_url, current_user) do
+    current_user = Repo.preload(current_user, :user_detail)
     case get_post_by(%{url: post_url}) do
-      nil ->
-        :noop
+      nil -> :noop
       post ->
         params =
           %{user_detail_id: current_user.user_detail.id, post_id: post.id}
-          |> put_timestamps() |> IO.inspect
+          |> put_timestamps()
 
         %PostLikes{}
         |> PostLikes.changeset(params)
         |> Repo.insert()
     end
+  end
+
+  def delete_like(params, current_user) do
+    case get_like(params) do
+      nil -> :noop
+      post -> Repo.delete(post)
+    end
+  end
+
+  def get_like(%{like_id: like_id}) do
+    Repo.get_by(PostLikes, id: like_id)
   end
 
   @doc """
@@ -210,7 +249,7 @@ defmodule PostTech.Contents do
   """
   def update_post(%Post{} = post, attrs) do
     post
-    |> Post.changeset(attrs)
+   |> Post.changeset(attrs)
     |> Repo.update()
   end
 
