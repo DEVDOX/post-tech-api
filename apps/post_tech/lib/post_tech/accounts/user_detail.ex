@@ -20,6 +20,8 @@ defmodule PostTech.Accounts.UserDetail do
     belongs_to :user, PostTech.Accounts.User
     has_many :contacts, PostTech.Accounts.UserContacts
 
+    has_many :likes,  PostTech.Contents.PostLikes
+
     timestamps()
   end
 

@@ -15,7 +15,7 @@ defmodule PostTech.Contents.PostLikes do
   def changeset(post, attrs) do
     post
     |> cast(attrs, [:post_id, :user_detail_id])
-    |> unique_constraint(:post_id)
-    |> unique_constraint(:user_detail_id)
+    |> unique_constraint(:post_id, name: :post_likes_id)
+    |> unique_constraint(:user_detail_id, name: :post_likes_id)
   end
 end
