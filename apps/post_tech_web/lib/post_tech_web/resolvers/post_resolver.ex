@@ -5,8 +5,20 @@ defmodule PostTechWeb.Resolvers.PostResolver do
     {:ok, Contents.list_posts()}
   end
 
+  def get_post(_, %{url: url}, %{context: %{current_user: current_user}}) do
+    {:ok, Contents.get_post_by(%{url: url}, current_user)}
+  end
+
+  def get_like(_, %{url: url}, %{context: %{current_user: current_user}}) do
+    {:ok, Contents.get_like(%{url: url}, current_user)}
+  end
+
   def get_post(_, %{url: url}, _) do
     {:ok, Contents.get_post_by(%{url: url})}
+  end
+
+  def get_tags_by_character(_, %{char: char}, _) do
+    {:ok, Contents.get_tags_by_character(%{char: char})}
   end
 
   def get_post(_, %{id: id}, _) do
@@ -41,8 +53,9 @@ defmodule PostTechWeb.Resolvers.PostResolver do
     end
   end
 
-  def create_like(_, %{post_url: post_url}, %{context: %{current_user: current_user}}) do
-    case Contents.like_post(post_url, current_user) do
+  def create_like(_, %{url: url}, %{context: %{current_user: current_user}}) do
+    IO.inspect current_user
+    case Contents.like_post(url, current_user) do
       {:ok, payload} ->
         {:ok, payload}
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -50,8 +63,8 @@ defmodule PostTechWeb.Resolvers.PostResolver do
     end
   end
 
-  def delete_like(_, %{post_url: post_url, like_id: like_id} = params, %{context: %{current_user: current_user}}) do
-    case Contents.delete_like(params, current_user) do
+  def delete_like(_, %{url: url} = params, %{context: %{current_user: current_user}}) do
+    case Contents.delete_like(url, current_user) do
       {:ok, payload} ->
         {:ok, payload}
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -68,8 +81,8 @@ defmodule PostTechWeb.Resolvers.PostResolver do
     end
   end
 
-  def delete_post(_, %{params: params}, %{context: %{current_user: current_user}}) do
-    case Contents.delete_post(params, current_user) do
+  def delete_post(_, %{url: url}, %{context: %{current_user: current_user}}) do
+    case Contents.delete_post(url, current_user) do
       {:ok, payload} ->
         {:ok, payload}
       {:error, %Ecto.Changeset{} = changeset} ->

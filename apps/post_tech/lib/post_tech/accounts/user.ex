@@ -15,7 +15,6 @@ defmodule PostTech.Accounts.User do
     field :strategy_id, :string, virtual: true
 
     has_one :user_detail, PostTech.Accounts.UserDetail
-    has_many :likes,  PostTech.Contents.PostLikes
 
     timestamps()
   end

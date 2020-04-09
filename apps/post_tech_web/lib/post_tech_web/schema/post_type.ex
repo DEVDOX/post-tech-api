@@ -2,11 +2,12 @@ defmodule PostTechWeb.Schema.PostType do
   @moduledoc false
   use Absinthe.Schema.Notation
 
-  alias PostTechWeb.Resolvers
-  alias PostTechWeb.Middlewares.Authentication
-
   import PostTechWeb.Schema.CustomTypes
   import AbsintheErrorPayload.Payload
+  import Absinthe.Resolution.Helpers, only: [dataloader: 1, dataloader: 3]
+
+  alias PostTechWeb.{Data, Resolvers}
+  alias PostTechWeb.Middlewares.Authentication
 
   import_types AbsintheErrorPayload.ValidationMessageTypes
 
@@ -28,10 +29,17 @@ defmodule PostTechWeb.Schema.PostType do
     field :body, :string
     field :url, :string
     field :uuid, :string
-    field :user_detail, :user_detail_type
     field :state, :string
-    field :tags, list_of(:tag_type)
-    field :likes, list_of(:like_type)
+
+    field :author, :user_detail_type,
+      resolve: dataloader(Data, :user_detail, [])
+
+    field :tags, list_of(:tag_type),
+      resolve: dataloader(Data, :tags, [])
+
+    field :likes, list_of(:like_type),
+      resolve: dataloader(Data, :likes, [])
+
     field :inserted_at, :naive_datetime
     field :updated_at, :naive_datetime
   end
@@ -51,6 +59,14 @@ defmodule PostTechWeb.Schema.PostType do
     field :tags, list_of(:tag_params)
   end
 
+  input_object :update_post_params do
+    field :url, non_null(:string)
+    field :title, :string
+    field :body, :string
+    field :state, :string
+    field :tags, list_of(:tag_params)
+  end
+
   # Mutation Result payload
   payload_object(:post_payload_type, :post_type)
   payload_object(:like_payload_type, :like_type)
@@ -60,6 +76,16 @@ defmodule PostTechWeb.Schema.PostType do
 
   # Queries
   object :post_queries do
+    field :get_tags_by_character, type: list_of(:tag_type) do
+      arg :char, :string
+      resolve &Resolvers.PostResolver.get_tags_by_character/3
+    end
+
+    field :get_like, type: :like_type do
+      arg :url, :string
+      resolve &Resolvers.PostResolver.get_like/3
+    end
+
     field :get_post_by_url, type: :post_type do
       arg :url, :string
       resolve &Resolvers.PostResolver.get_post/3
@@ -104,24 +130,30 @@ defmodule PostTechWeb.Schema.PostType do
       middleware &build_payload/2
     end
 
-    field :create_post, type: :post_payload_type do
-      arg :params, non_null(:create_post_params)
+    field :update_post, type: :post_payload_type do
+      arg :params, non_null(:update_post_params)
       middleware Authentication
-      resolve &Resolvers.PostResolver.create_post/3
+      resolve &Resolvers.PostResolver.update_post/3
       middleware &build_payload/2
     end
 
-    field :add_like, type: :post_payload_type do
-      arg :post_url, non_null(:string)
+    field :delete_post, type: :post_payload_type do
+      arg :url, non_null(:string)
+      middleware Authentication
+      resolve &Resolvers.PostResolver.delete_post/3
+      middleware &build_payload/2
+    end
+
+    field :add_like, type: :like_payload_type do
+      arg :url, non_null(:string)
       middleware Authentication
       resolve &Resolvers.PostResolver.create_like/3
       middleware &build_payload/2
     end
 
-    field :delete_like, type: :post_payload_type do
-      arg :post_url, non_null(:string)
-      arg :like_id, non_null(:integer)
-      middleware Authentication
+    field :delete_like, type: :like_payload_type do
+      arg :url, non_null(:string)
+      middlew Authentication
       resolve &Resolvers.PostResolver.delete_like/3
       middleware &build_payload/2
     end

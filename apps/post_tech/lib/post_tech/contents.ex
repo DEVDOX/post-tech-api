@@ -40,11 +40,17 @@ defmodule PostTech.Contents do
   """
   def get_post!(id), do: Repo.get!(Post, id)
 
+  def get_post_by(%{url: url}, current_user) do
+    Post
+    |> where([p], p.state == ^:published)
+    |> where([p], p.url == ^url)
+    |> Repo.one()
+  end
+
   def get_post_by(%{url: url}) do
     Post
     |> where([p], p.state == ^:published)
     |> where([p], p.url == ^url)
-    |> preload([p], [:user_detail, :tags, :likes])
     |> Repo.one()
   end
 
@@ -79,7 +85,7 @@ defmodule PostTech.Contents do
     |> join(:left, [p], tag in assoc(p, :tags))
     |> group_by([p], p.id)
     |> having([p, tag], fragment("? <@ array_agg(?)", ^[url], tag.url_name))
-    |> preload([p], :tags)
+    |> preload([p], [:tags, :user_detail])
     |> paginate_posts(metadata)
   end
 
@@ -224,11 +230,33 @@ defmodule PostTech.Contents do
     end
   end
 
-  def delete_like(params, current_user) do
-    case get_like(params) do
-      nil -> :noop
-      post -> Repo.delete(post)
+  def delete_like(url, current_user) do
+    like =
+    PostLikes
+    |> join(:inner, [like], p in Post, on: p.id == like.post_id , on: p.url == ^url)
+    |> where([pl, p], p.url == ^url)
+    |> preload([p], :post)
+    |> Repo.one()
+    |> case do
+      nil ->
+        :noop
+      like ->
+        IO.inspect like
+        Repo.delete(like)
     end
+  end
+
+  def get_tags_by_character(%{char: char}) do
+    Tag
+    |> where([t], like(t.url_name, ^"%#{char}%"))
+    |> Repo.all()
+  end
+
+  def get_like(%{url: url}, current_user) do
+    PostLikes
+    |> join(:inner, [like], p in Post, on: like.post_id == p.id, on: p.url == ^url, on: p.user_detail_id == ^current_user.id)
+    |> preload(:post)
+    |> Repo.one()
   end
 
   def get_like(%{like_id: like_id}) do
@@ -247,10 +275,20 @@ defmodule PostTech.Contents do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_post(%Post{} = post, attrs) do
+  def update_post(%Post{} = post, attrs, current_user) do
     post
-   |> Post.changeset(attrs)
+    |> Post.changeset(attrs)
     |> Repo.update()
+  end
+
+  def update_post(params, current_user) do
+    case get_post_by(%{url: params[:url]}) do
+      nil -> :noop
+      post ->
+        post
+        |> Post.changeset(params)
+        |> Repo.update()
+    end
   end
 
   @doc """
@@ -268,6 +306,17 @@ defmodule PostTech.Contents do
   def delete_post(%Post{} = post, current_user) do
     if post.user_detail.id == current_user.user_detail.id do
       Repo.delete(post)
+    end
+  end
+
+  def delete_post(url, current_user) do
+    current_user = Repo.preload(current_user, :user_detail)
+    case get_post_by(%{url: url}) do
+      nil -> :noop
+      post ->
+        if post.user_detail.id == current_user.user_detail.id do
+          Repo.delete(post)
+        end
     end
   end
 
