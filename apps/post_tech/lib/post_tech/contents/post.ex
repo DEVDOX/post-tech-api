@@ -14,7 +14,7 @@ defmodule PostTech.Contents.Post do
     belongs_to :user_detail, PostTech.Accounts.UserDetail
     # has_one :user_detail, PostTech.Accounts.UserDetail, references: :user_id, foreign_key: :user_id
 
-    many_to_many :tags,  PostTech.Contents.Tag, join_through: "posts_tags"
+    many_to_many :tags,  PostTech.Contents.Tag, join_through: "posts_tags", on_replace: :delete
     has_many :likes,  PostTech.Contents.PostLikes
 
     timestamps()

@@ -164,7 +164,8 @@ defmodule PostTech.Contents do
             |> Map.put(:url_name, String.downcase(row.name))
             |> Map.put(:user_detail_id, user_detail_id)
           Tag.changeset(%Tag{}, row) |> Repo.insert!
-        tag -> tag
+        tag ->
+          tag
       end
     end)
   end
@@ -246,7 +247,7 @@ defmodule PostTech.Contents do
     end
   end
 
-  def get_tags_by_character(%{char: char}) do
+  def search_tags(%{char: char}) do
     Tag
     |> where([t], like(t.url_name, ^"%#{char}%"))
     |> Repo.all()
@@ -282,10 +283,31 @@ defmodule PostTech.Contents do
   end
 
   def update_post(params, current_user) do
+    IO.inspect params
     case get_post_by(%{url: params[:url]}) do
-      nil -> :noop
+      nil -> :noop # TODO
       post ->
+        new_tags =
+          params[:tags]
+          |> Enum.filter(fn tag ->
+            Map.has_key?(tag, :id) == false
+          end)
+          |> create_tags(current_user.id)
+
+        gather_tags =
+          Enum.filter(params[:tags], fn tag ->
+            if Map.has_key?(tag, :id) do
+              Repo.get!(Tag, tag.id)
+            end
+          end) ++ new_tags
+
+        post = Repo.preload(post, [:tags, :user_detail])
+
+        IO.inspect gather_tags ++ post.tags
+
         post
+        |> Ecto.Changeset.change
+        |> Ecto.Changeset.put_assoc(:tags, new_tags ++ post.tags)
         |> Post.changeset(params)
         |> Repo.update()
     end

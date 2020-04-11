@@ -17,8 +17,8 @@ defmodule PostTechWeb.Resolvers.PostResolver do
     {:ok, Contents.get_post_by(%{url: url})}
   end
 
-  def get_tags_by_character(_, %{char: char}, _) do
-    {:ok, Contents.get_tags_by_character(%{char: char})}
+  def search_tags(_, params, _) do
+    {:ok, Contents.search_tags(params)}
   end
 
   def get_post(_, %{id: id}, _) do

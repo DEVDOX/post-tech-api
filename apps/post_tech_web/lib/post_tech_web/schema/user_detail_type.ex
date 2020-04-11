@@ -43,12 +43,13 @@ defmodule PostTechWeb.Schema.UserDetailType do
 
   input_object :create_params do
     field :strategy, non_null(:string)
-    field :strategy_id, :string
+    field :strategy_id, non_null(:string)
 
     field :avatar, :string
     field :email, :string
     field :display_name, :string
-    field :unique_name, :string
+    field :unique_name, non_null(:string)
+    field :locale_code, :string
   end
 
   input_object :contact_params do

@@ -45,10 +45,7 @@ defmodule PostTechWeb.Schema.PostType do
   end
 
   input_object :tag_params do
-    field :name, non_null(:string)
-  end
-
-  input_object :tag_params do
+    field :id, :id
     field :name, non_null(:string)
   end
 
@@ -76,9 +73,9 @@ defmodule PostTechWeb.Schema.PostType do
 
   # Queries
   object :post_queries do
-    field :get_tags_by_character, type: list_of(:tag_type) do
+    field :search_tags, type: list_of(:tag_type) do
       arg :char, :string
-      resolve &Resolvers.PostResolver.get_tags_by_character/3
+      resolve &Resolvers.PostResolver.search_tags/3
     end
 
     field :get_like, type: :like_type do
