@@ -120,20 +120,20 @@ defmodule PostTech.Contents do
     Repo.paginate(query, cursor_fields: [:inserted_at, :id])
   end
 
-  def paginate_posts(query, %{after: _after_cursor, before: _before} = params) do
-    params = :maps.filter fn _, v -> v != nil end, params
-    paginate_posts(query, params)
-  end
-
-  def paginate_posts(%{tag_url: tag_url, metadata: metadata}) do
-  end
-
   def paginate_posts(query, %{before: before_cursor}) do
     Repo.paginate(query, before: before_cursor, cursor_fields: [:inserted_at, :id])
   end
 
   def paginate_posts(query, %{after: after_cursor}) do
     Repo.paginate(query, after: after_cursor, cursor_fields: [:inserted_at, :id])
+  end
+
+  def paginate_posts(query, %{after: _after_cursor, before: _before} = params) do
+    params = :maps.filter fn _, v -> v != nil end, params
+    paginate_posts(query, params)
+  end
+
+  def paginate_posts(%{tag_url: tag_url, metadata: metadata}) do
   end
 
   def put_timestamps(attrs) when is_list(attrs) do
