@@ -10,6 +10,8 @@ defmodule PostTech.Contents do
   alias PostTech.Accounts
   alias PostTech.Accounts.UserDetail
 
+  alias AbsintheErrorPayload.ValidationMessage
+
   @doc """
   Returns the list of posts.
 
@@ -108,7 +110,6 @@ defmodule PostTech.Contents do
   end
 
   def get_user_posts(%{unique_name: unique_name, metadata: metadata}) do
-    IO.inspect metadata
     Post
     |> join(:left, [p], user_detail in UserDetail, on: user_detail.unique_name == ^unique_name)
     |> where([p, user_detail], user_detail.unique_name == ^unique_name)
@@ -242,7 +243,6 @@ defmodule PostTech.Contents do
       nil ->
         :noop
       like ->
-        IO.inspect like
         Repo.delete(like)
     end
   end
@@ -283,9 +283,9 @@ defmodule PostTech.Contents do
   end
 
   def update_post(params, current_user) do
-    IO.inspect params
     case get_post_by(%{url: params[:url]}) do
-      nil -> :noop # TODO
+      nil ->
+        {:error, %ValidationMessage{field: :id, code: "not found", message: "does not exist"}}
       post ->
         new_tags =
           params[:tags]

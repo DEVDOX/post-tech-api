@@ -1,5 +1,6 @@
 defmodule PostTechWeb.Resolvers.PostResolver do
   alias PostTech.Contents
+  alias AbsintheErrorPayload.ValidationMessage
 
   def list(_, _context, _) do
     {:ok, Contents.list_posts()}
@@ -78,6 +79,8 @@ defmodule PostTechWeb.Resolvers.PostResolver do
         {:ok, payload}
       {:error, %Ecto.Changeset{} = changeset} ->
         {:ok, changeset}
+      {:error, %ValidationMessage{} = message} ->
+        {:ok, message}
     end
   end
 

@@ -99,6 +99,12 @@ defmodule PostTechWeb.Schema.PostType do
       resolve &Resolvers.PostResolver.get_user_posts/3
     end
 
+    field :user_liked_posts, type: :post_pagination_type do
+      arg :metadata, :metadata_input
+      arg :unique_name, non_null(:string)
+      resolve &Resolvers.PostResolver.get_user_liked_posts/3
+    end
+
     field :get_user_posts_by_u_name, type: :post_pagination_type do
       arg :metadata, :metadata_input
       arg :unique_name, non_null(:string)
