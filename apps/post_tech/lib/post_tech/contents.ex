@@ -42,13 +42,25 @@ defmodule PostTech.Contents do
   """
   def get_post!(id), do: Repo.get!(Post, id)
 
+  def is_post_owner?(post, user_detail) do
+    if post.user_detail_id == user_detail.id do
+      true
+    end
+  end
+
+  @doc """
+  Get a single post by url for current user
+  """
   def get_post_by(%{url: url}, current_user) do
     Post
-    |> where([p], p.state == ^:published)
     |> where([p], p.url == ^url)
+    |> where([p], p.user_detail_id == ^current_user.id)
     |> Repo.one()
   end
 
+  @doc """
+  Get a single post by url
+  """
   def get_post_by(%{url: url}) do
     Post
     |> where([p], p.state == ^:published)
@@ -70,9 +82,13 @@ defmodule PostTech.Contents do
 
   def get_public_posts(%{metadata: metadata}) do
     Post
-    |> where([p], p.state == ^:published)
-    |> preload([p], [:user_detail, :tags])
+    |> join(:left, [p], like in assoc(p, :likes), on: like.post_id == p.id)
+    |> where([p, like], p.state == ^:published)
+    |> preload([p, like], [:user_detail, :tags])
+    |> group_by([p, like], p.id)
+    |> select([p, like], %{p | like_count: count(like.id)})
     |> paginate_posts(metadata)
+    |> IO.inspect
   end
 
   def get_public_posts(%{url: url, metadata: metadata}) do
@@ -333,7 +349,8 @@ defmodule PostTech.Contents do
 
   def delete_post(url, current_user) do
     current_user = Repo.preload(current_user, :user_detail)
-    case get_post_by(%{url: url}) do
+
+    case get_post_by(%{url: url}, current_user) do
       nil -> :noop
       post ->
         if post.user_detail.id == current_user.user_detail.id do

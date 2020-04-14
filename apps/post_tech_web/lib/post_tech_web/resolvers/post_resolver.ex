@@ -39,9 +39,7 @@ defmodule PostTechWeb.Resolvers.PostResolver do
     {:ok, Contents.get_posts_by_tag(params)}
   end
 
-  def get_user_liked_posts(_, %{unique_name: _unique_name,
-    metadata: _metadata} = params, _)
-  do
+  def get_user_liked_posts(_, %{unique_name: _u, metadata: _m} = params, _) do
     {:ok, Contents.get_user_liked_posts(params)}
   end
 

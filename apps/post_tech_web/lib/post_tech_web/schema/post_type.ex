@@ -42,13 +42,21 @@ defmodule PostTechWeb.Schema.PostType do
 
     field :inserted_at, :naive_datetime
     field :updated_at, :naive_datetime
+
+    field :like_count, :integer
   end
 
+  @desc """
+  Input params for tags
+  """
   input_object :tag_params do
     field :id, :id
     field :name, non_null(:string)
   end
 
+  @desc """
+  Input params for creating new post
+  """
   input_object :create_post_params do
     field :title, non_null(:string)
     field :body, non_null(:string)
@@ -56,6 +64,9 @@ defmodule PostTechWeb.Schema.PostType do
     field :tags, list_of(:tag_params)
   end
 
+  @desc """
+  Input params to be used when updating a post
+  """
   input_object :update_post_params do
     field :url, non_null(:string)
     field :title, :string
@@ -64,60 +75,99 @@ defmodule PostTechWeb.Schema.PostType do
     field :tags, list_of(:tag_params)
   end
 
-  # Mutation Result payload
+  @desc """
+    Post payload object types for mutations
+  """
   payload_object(:post_payload_type, :post_type)
+
+  @desc """
+    Liek payload object types for mutations
+  """
   payload_object(:like_payload_type, :like_type)
 
-  # Pagination payload
+  @desc """
+    Pagination object for post
+  """
   paginate_object(:post_pagination_type, :post_type)
 
   # Queries
   object :post_queries do
+    @desc """
+    Search every tag by any characters.
+    """
     field :search_tags, type: list_of(:tag_type) do
       arg :char, :string
       resolve &Resolvers.PostResolver.search_tags/3
     end
 
-    field :get_like, type: :like_type do
-      arg :url, :string
+    @desc """
+    Finds a like from a given url
+    """
+    field :like, type: :like_type do
+      arg :url, :string, description: "Url of a post"
+
+      middlew Authentication
       resolve &Resolvers.PostResolver.get_like/3
     end
 
-    field :get_post_by_url, type: :post_type do
+    @desc """
+    Find a specific post by url
+    """
+    field :post_by_url, type: :post_type do
       arg :url, :string
+
+      middlew Authentication
       resolve &Resolvers.PostResolver.get_post/3
     end
 
-    field :get_public_posts, type: :post_pagination_type do
+    @desc """
+    Fetch 10 posts where state is published
+    """
+    field :public_posts, type: :post_pagination_type do
       arg :metadata, :metadata_input
       resolve &Resolvers.PostResolver.get_public_posts/3
     end
 
-    field :get_user_posts_by_id, type: :post_pagination_type do
+    @desc """
+    Fetch 10 posts from a user where state is published
+    """
+    field :user_posts_by_id, type: :post_pagination_type do
       arg :metadata, :metadata_input
       arg :user_id, non_null(:integer)
       resolve &Resolvers.PostResolver.get_user_posts/3
     end
 
+    @desc """
+    Fetch 10 liked posts from a user where state is published
+    """
     field :user_liked_posts, type: :post_pagination_type do
       arg :metadata, :metadata_input
       arg :unique_name, non_null(:string)
       resolve &Resolvers.PostResolver.get_user_liked_posts/3
     end
 
-    field :get_user_posts_by_u_name, type: :post_pagination_type do
+    @desc """
+    Fetch posts from a user
+    """
+    field :user_posts_by_u_name, type: :post_pagination_type do
       arg :metadata, :metadata_input
       arg :unique_name, non_null(:string)
       resolve &Resolvers.PostResolver.get_user_posts/3
     end
 
-    field :get_posts_by_tag, type: :post_pagination_type do
+    @desc """
+    Fetch 10 posts by tag
+    """
+    field :posts_by_tag, type: :post_pagination_type do
       arg :metadata, :metadata_input
       arg :url, non_null(:string)
       resolve &Resolvers.PostResolver.get_posts_by_tag/3
     end
 
-    field :get_user_liked_posts, type: :post_pagination_type do
+    @desc """
+    Fetch 10 liked posts from a user where state is published
+    """
+    field :user_liked_posts, type: :post_pagination_type do
       arg :metadata, :metadata_input
       arg :unique_name, non_null(:string)
       resolve &Resolvers.PostResolver.get_user_liked_posts/3

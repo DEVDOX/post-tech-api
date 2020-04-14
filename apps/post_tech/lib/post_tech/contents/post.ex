@@ -17,6 +17,9 @@ defmodule PostTech.Contents.Post do
     many_to_many :tags,  PostTech.Contents.Tag, join_through: "posts_tags", on_replace: :delete
     has_many :likes,  PostTech.Contents.PostLikes
 
+
+    field :like_count, :integer, virtual: true
+
     timestamps()
   end
 
