@@ -35,6 +35,10 @@ config :phoenix, :json_library, Jason
 
 config :phoenix, :filter_parameters, ["strategy_token", "strategyToken", "token", "secret"]
 
+config :post_tech, PostTech.Guardian,
+  issuer: "post_tech",
+  secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
