@@ -22,3 +22,7 @@ config :post_tech_web, PostTechWeb.Endpoint,
   http: [:inet6, port: String.to_integer(System.get_env("PORT") || "4000")],
   secret_key_base: secret_key_base,
   server: true
+
+config :post_tech, PostTech.Guardian,
+  issuer: "post_tech",
+  secret_key: "Secret key. You can use `mix guardian.gen.secret` to get one"
