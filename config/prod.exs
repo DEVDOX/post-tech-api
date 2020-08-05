@@ -1,8 +1,9 @@
 use Mix.Config
 
 config :post_tech_web, PostTechWeb.Endpoint,
-  http: [port: 4000],
-  cache_static_manifest: "priv/static/cache_manifest.json",
+  http: [port: {:system, "PORT"}],
+  url: [scheme: "https", host: "warm-anchorage-79068.herokuapp.com", port: 443],
+  force_ssl: [rewrite_on: [:x_forwarded_proto]],
   server: true
 
 config :post_tech, PostTech.Repo,
