@@ -1,6 +1,7 @@
 defmodule PostTechWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :post_tech_web
 
+  plug CORSPlug
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
@@ -38,7 +39,6 @@ defmodule PostTechWeb.Endpoint do
     pass: ["*/*"],
     json_decoder: Phoenix.json_library()
 
-  plug CORSPlug
 
   plug Plug.MethodOverride
   plug Plug.Head

@@ -6,13 +6,26 @@ defmodule PostTech.Umbrella.MixProject do
       apps_path: "apps",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      aliases: aliases()
+      aliases: aliases(),
+      releases: releases()
     ]
   end
 
   defp deps do
     [
       {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false},
+    ]
+  end
+
+  defp releases do
+    [
+      include_executables_for: [:unix],
+      app: [
+        applications: [
+          post_tech: :permanent,
+          post_tech_web: :permanent,
+        ]
+      ]
     ]
   end
 
