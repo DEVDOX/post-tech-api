@@ -106,7 +106,7 @@ defmodule PostTechWeb.Schema.PostType do
     field :like, type: :like_type do
       arg :url, :string, description: "Url of a post"
 
-      middlew Authentication
+      middleware Authentication
       resolve &Resolvers.PostResolver.get_like/3
     end
 
@@ -116,7 +116,7 @@ defmodule PostTechWeb.Schema.PostType do
     field :post_by_url, type: :post_type do
       arg :url, :string
 
-      middlew Authentication
+      middleware Authentication
       resolve &Resolvers.PostResolver.get_post/3
     end
 
@@ -206,7 +206,7 @@ defmodule PostTechWeb.Schema.PostType do
 
     field :delete_like, type: :like_payload_type do
       arg :url, non_null(:string)
-      middlew Authentication
+      middleware Authentication
       resolve &Resolvers.PostResolver.delete_like/3
       middleware &build_payload/2
     end
